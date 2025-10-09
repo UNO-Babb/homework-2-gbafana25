@@ -75,8 +75,7 @@ def main():
   now = datetime.datetime.now()
   tz = pytz.timezone("America/Chicago")
   now_cst = tz.localize(now)
-  #now_str = now_cst.strftime("%I:%M%p")
-  now_str = "10:04AM"
+  now_str = now_cst.strftime("%I:%M%p")
   print("Current Time: "+now_str)
   stop_num = "2269"
   route_num = "11"
@@ -91,7 +90,13 @@ def main():
     if line[-2:] == "AM" or line[-2:] == "PM":
       if isLater(line, now_str):
         times.append(line)
-  print("The next bus will arrive in "+str(getMinutes(times[0])-getMinutes(now_str))+" minutes")
+
+  first_time_diff = 0
+  if getHours(times[0]) == getHours(now_str) and getMinutes(times[0]) > getMinutes(now_str):
+    first_time_diff = getMinutes(times[0])-getMinutes(now_str)
+  elif getHours(times[0]) > getHours(now_str):
+    first_time_diff = getMinutes(now_str)-getMinutes(times[0])
+  print("The next bus will arrive in "+str(first_time_diff)+" minutes")
   print("The following bus will arrive in "+str(getMinutes(times[1])-getMinutes(now_str))+" minutes")
 
 
