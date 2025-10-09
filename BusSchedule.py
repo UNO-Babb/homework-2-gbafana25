@@ -7,6 +7,7 @@ import datetime
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+import pytz
 
 
 def loadURL(url):
@@ -43,8 +44,12 @@ def getHours(timestr):
   hours = t.split(":")[0]
   day = timestr[-2:]
   if day == "AM":
+    if hours == "12":
+      return 0
     return int(hours)
   else:
+    if hours == "12":
+      return 12
     return int(hours)+12
   
 def getMinutes(timestr):
@@ -52,15 +57,42 @@ def getMinutes(timestr):
   minutes = t.split(":")[1]
   return int(minutes)
 
+def isLater(time1, time2):
+  h1 = getHours(time1)
+  h2 = getHours(time2)
+  m1 = getMinutes(time1)
+  m2 = getMinutes(time2)
+
+  if h1 > h2:
+    return True
+  else:
+    if h1 == h2 and m1 > m2:
+      return True
+    else:
+      return False
+
 def main():
-  url = "https://myride.ometro.com/Schedule?stopCode=2269&routeNumber=11&directionName=EAST"
+  now = datetime.datetime.now()
+  tz = pytz.timezone("America/Chicago")
+  now_cst = tz.localize(now)
+  #now_str = now_cst.strftime("%I:%M%p")
+  now_str = "10:04AM"
+  print("Current Time: "+now_str)
+  stop_num = "2269"
+  route_num = "11"
+  direction = "EAST"
+  url = "https://myride.ometro.com/Schedule?stopCode="+stop_num+"&routeNumber="+route_num+"&directionName="+direction
   #c1 = loadURL(url) #loads the web page
   c1 = loadTestPage() #loads the test page
+  times = []
   for line in c1.split("\n"):
-    #print(line)
+    if len(times) == 2:
+      break
     if line[-2:] == "AM" or line[-2:] == "PM":
-      print("Hour: "+str(getHours(line)))
-      print("Minutes: "+str(getMinutes(line)))
-      print()
+      if isLater(line, now_str):
+        times.append(line)
+  print("The next bus will arrive in "+str(getMinutes(times[0])-getMinutes(now_str))+" minutes")
+  print("The following bus will arrive in "+str(getMinutes(times[1])-getMinutes(now_str))+" minutes")
+
 
 main()
